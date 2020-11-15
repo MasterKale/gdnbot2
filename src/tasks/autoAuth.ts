@@ -23,7 +23,7 @@ export default function autoAuth (member: GuildMember) {
     } catch (err) {
       logger.error(
         { ...tag, err },
-        `Error executing autoAuth in guild ${guild.name} (${guild.id})`,
+        `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
       );
       return;
     }

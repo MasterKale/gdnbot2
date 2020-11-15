@@ -207,7 +207,7 @@ test('does not proceed when error occurs while checking if user has authed befor
 
   expect(logger.error).toHaveBeenLastCalledWith(
     { req_id: testTag, err: new Error('Request failed with status code 500') },
-    `Error executing autoAuth in guild ${guild.name} (${guild.id})`,
+    `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
   );
 });
 
@@ -279,6 +279,6 @@ test('does not proceed when an error occurs while checking if user is blackliste
 
   expect(logger.error).toHaveBeenLastCalledWith(
     { req_id: testTag, err: new Error('Request failed with status code 500') },
-    `Error executing autoAuth in guild ${guild.name} (${guild.id})`,
+    `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
   );
 });
