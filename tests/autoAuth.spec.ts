@@ -205,8 +205,9 @@ test('does not proceed when error occurs while checking if user has authed befor
 
   await timeoutFn();
 
-  expect((logger.error as jest.Mock).mock.calls[0][1]).toEqual(
-    /error executing autoAuth in guild/i
+  expect(logger.error).toHaveBeenLastCalledWith(
+    { req_id: testTag, err: new Error('Request failed with status code 500') },
+    `Error executing autoAuth in guild ${guild.name} (${guild.id})`,
   );
 });
 
