@@ -276,5 +276,8 @@ test('does not proceed when an error occurs while checking if user is blackliste
 
   await timeoutFn();
 
-  expect(logger.info).toHaveBeenLastCalledWith({ req_id: testTag }, 'Did not proceed with auto-auth');
+  expect(logger.error).toHaveBeenLastCalledWith(
+    { req_id: testTag, err: new Error('Request failed with status code 500') },
+    `Error executing autoAuth in guild ${guild.name} (${guild.id})`,
+  );
 });
