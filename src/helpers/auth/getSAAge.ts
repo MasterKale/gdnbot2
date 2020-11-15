@@ -17,7 +17,7 @@ export default async function getSAAge (tag: LogTag, profile: CheerioStatic): Pr
   // Prepare to parse it
   const $ = profile;
 
-  // Try to grab the post count
+  // Try to grab the reg date
   const regDateText = $('dd.registered').text();
 
   /**
