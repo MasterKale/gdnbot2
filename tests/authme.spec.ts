@@ -1,5 +1,6 @@
 import moxios from 'moxios';
 import { oneLine, stripIndents } from 'common-tags';
+import { DateTime } from 'luxon';
 
 import AuthmeCommand from '../src/commands/auth/authme';
 
@@ -143,7 +144,8 @@ const badUserIDSAProfileHTML = oneLine`
 </html>
 `;
 
-// Bad Profile: Insufficient user post count
+// Bad Profile: Insufficient account age
+const now = DateTime.local();
 const badPostCountSAProfileHTML = oneLine`
 <!DOCTYPE html>
 <html lang="en">
@@ -160,7 +162,8 @@ const badPostCountSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
-      <td><dd class="registered">Aug 28, 2008</td>
+      <!-- Pretend the user registered today -->
+      <td><dd class="registered">${now.toFormat('LLL d, y')}</td>
     </tr>
   </table>
   <input type="hidden" name="userid" value="${saID}" />
@@ -667,7 +670,7 @@ test('messages channel and logs error when an error occurs while checking if use
   expect(logger.error).toHaveBeenCalledWith({ req_id: message.id, err: new Error('Request failed with status code 500') }, 'Error checking if member has authed');
 });
 
-test('messages channel when user post count is too low', async () => {
+test('messages channel when user SA account is too young', async () => {
   // Guild is enrolled in GDN
   moxios.stubRequest(GDN_GUILD, {
     status: 200,
@@ -709,7 +712,7 @@ test('messages channel when user post count is too low', async () => {
 
   await authme.run(message, { username: saUsername });
 
-  expect(message.say).toHaveBeenLastCalledWith('Your SA account has an insufficient posting history. Please try again later.');
+  expect(member.send).toHaveBeenLastCalledWith('Your SA account must be at least 7 days old. Please try again later.');
 });
 
 test('messages user and logs error when an error occurs while retrieving SA profile', async () => {
