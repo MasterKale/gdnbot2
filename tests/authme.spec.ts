@@ -192,7 +192,8 @@ const badChangedMarkupSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
-      <td><dd class="registered">Aug 28, 2008</td>
+      <!-- Pretend reg dates are no longer shown -->
+      <td><dd class="registered">WHO KNOWS????</td>
     </tr>
   </table>
   <input type="hidden" name="userid" value="${saID}" />
@@ -760,7 +761,7 @@ test('messages user and logs error when an error occurs while retrieving SA prof
   expect(logger.error).toHaveBeenCalledWith({ req_id: message.id, err: new Error('Request failed with status code 500') }, 'Error retrieving SA profile page');
 });
 
-test('messages user when bot is unable to parse post count from profile', async () => {
+test('messages user when bot is unable to parse account reg date from profile', async () => {
   // Guild is enrolled in GDN
   moxios.stubRequest(GDN_GUILD, {
     status: 200,
@@ -802,8 +803,8 @@ test('messages user when bot is unable to parse post count from profile', async 
 
   await authme.run(message, { username: saUsername });
 
-  expect(member.send).toHaveBeenLastCalledWith('I could not find a post count on the SA profile page for the username you provided. The bot owner has been notified. Thank you for your patience while they get this fixed!');
-  expect(logger.error).toHaveBeenCalledWith({ req_id: message.id }, 'No post count was found');
+  expect(member.send).toHaveBeenLastCalledWith('I could not find a valid reg date on your SA profile page. The bot owner has been notified. Thank you for your patience while they get this fixed!');
+  expect(logger.error).toHaveBeenCalledWith({ req_id: message.id }, 'Invalid reg date was found');
 });
 
 test('logs error when error occurs while adding user to database', async () => {
