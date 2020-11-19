@@ -151,7 +151,7 @@ export default class ListCommand extends GDNCommand {
       {
         key: 'confirm',
         prompt: stripIndents`
-          does everything look correct?
+          does everything look correct? Respond with **yes** or **no** to continue:
 
           **Server Name:** ${details.name}
           **Description:** ${details.description}
