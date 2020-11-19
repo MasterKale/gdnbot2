@@ -34,13 +34,12 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
       // Grab the auth role ID registered with the backend
       const authedRoleID = guildsMap[guild.id].validated_role_id;
 
-      let authedUsers: Collection<string, GuildMember>;
-      let message: string;
-      if (!authedRoleID) {
-        // Auth wasn't set up here, so just return the total number of Members
-        authedUsers = guild.members.cache;
-        message = 'Updating total member count';
-      } else {
+      // Query for all guild users
+      logger.debug(subTag, `Fetching users in ${guild.name}`);
+      let authedUsers: Collection<string, GuildMember> = await guild.members.fetch();
+      let message: string = 'Updating total member count';
+
+      if (authedRoleID) {
         // Go through each Member and filter for ones that have the Guild's auth role
         authedUsers = guild.members.cache.filter(
           member => member.roles.cache.some(role => role.id === authedRoleID),
@@ -73,7 +72,7 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
 
         await axiosGDN.patch(`${GDN_URLS.GUILDS}/${guild.id}`, payload);
 
-        logger.info(subTag, 'Successfully updated member count and name');
+        logger.info(subTag, `Successfully updated ${guild.name} member count and name`);
       } catch (err) {
         logger.error({ ...subTag, err }, 'Error sending updated count to server');
       }
