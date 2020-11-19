@@ -72,7 +72,7 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
 
         await axiosGDN.patch(`${GDN_URLS.GUILDS}/${guild.id}`, payload);
 
-        logger.info(subTag, 'Successfully updated member count and name');
+        logger.info(subTag, `Successfully updated ${guild.name} member count and name`);
       } catch (err) {
         logger.error({ ...subTag, err }, 'Error sending updated count to server');
       }
