@@ -7,7 +7,7 @@ import canMemberAuth from '../../checks/canMemberAuth';
 import isValidAuthRole from '../../checks/isValidAuthRole';
 import isValidLogChannel from '../../checks/isValidLogChannel';
 
-interface AuthCheckDecision {
+export interface AuthCheckDecision {
   canProceed: boolean;
   reason?: string;
   alreadyAuthed?: boolean;

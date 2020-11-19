@@ -2,7 +2,7 @@ import { GuildMember } from 'discord.js';
 
 import logger, { getLogTag } from '../helpers/logger';
 
-import startAuthCheck from '../helpers/auth/startAuthCheck';
+import startAuthCheck, { AuthCheckDecision } from '../helpers/auth/startAuthCheck';
 import addRoleAndLog from '../helpers/auth/addRoleAndLog';
 
 /**
@@ -17,14 +17,24 @@ export default function autoAuth (member: GuildMember) {
 
   // Wait a second before proceeding with auto-auth
   setTimeout(async () => {
-    const {
-      canProceed,
-      saUsername,
-      validatedRole,
-      validatedChannel,
-    } = await startAuthCheck(tag, guild, member, false);
+    let decision: AuthCheckDecision;
+    try {
+      decision = await startAuthCheck(tag, guild, member, false);
+    } catch (err) {
+      logger.error(
+        { ...tag, err },
+        `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
+      );
+      return;
+    }
 
-    if (canProceed) {
+    if (decision.canProceed) {
+      const {
+        saUsername,
+        validatedRole,
+        validatedChannel,
+      } = decision;
+
       await addRoleAndLog(
         tag,
         member,

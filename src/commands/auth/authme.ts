@@ -89,7 +89,7 @@ export default class AuthmeCommand extends GDNCommand {
     );
 
     if (!canProceed) {
-      return message.reply(checkReason);
+      return message.reply(`${checkReason}`);
     }
 
     if (alreadyAuthed) {
@@ -186,7 +186,7 @@ export default class AuthmeCommand extends GDNCommand {
     const { confirmed, reason: confirmReason } = await confirmHash(tag, member, username);
 
     if (!confirmed) {
-      return member.send(confirmReason);
+      return member.send(`${confirmReason}`);
     }
 
     /**
@@ -195,7 +195,7 @@ export default class AuthmeCommand extends GDNCommand {
     const { profile, reason: reasonErrorProfileLoad } = await getSAProfile(tag, username);
 
     if (!profile) {
-      return member.send(reasonErrorProfileLoad);
+      return member.send(`${reasonErrorProfileLoad}`);
     }
 
     /**
@@ -204,7 +204,7 @@ export default class AuthmeCommand extends GDNCommand {
     const { id: saID, reason: reasonNoID } = await getSAID(tag, profile);
 
     if (!saID) {
-      return member.send(reasonNoID);
+      return member.send(`${reasonNoID}`);
     }
 
     /**
@@ -214,7 +214,7 @@ export default class AuthmeCommand extends GDNCommand {
 
     // Reg dates in the past will have a negative age
     if (age === undefined) {
-      return member.send(reasonNoRegDate);
+      return member.send(`${reasonNoRegDate}`);
     }
 
     if (age < AUTH_MIN_ACCOUNT_AGE_DAYS) {

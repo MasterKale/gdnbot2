@@ -8,7 +8,7 @@ import logger, { LogTag } from '../helpers/logger';
  * @param {Client} bot
  */
 const updateServerCountActivity = async (tag: LogTag, bot: CommandoClient) => {
-  const activity = `in ${bot.guilds.size} servers`;
+  const activity = `in ${bot.guilds.cache.size} servers`;
 
   logger.info(tag, `setting activity to "${activity}"`);
 

@@ -28,9 +28,6 @@ const bot = new CommandoClient({
   commandPrefix: CMD_PREFIX,
   owner: '148474055949942787',
   invite: 'https://discord.gg/vH8uVUE',
-  disabledEvents: [
-    'TYPING_START',
-  ],
 });
 
 // Set up a SQLite DB to preserve guide-specific command availability
@@ -89,7 +86,7 @@ bot.once('ready', () => {
 });
 
 // Handle errors
-bot.on('error', (err) => {
+bot.on('error', (err: Error) => {
   if (err.message === 'Cannot read property \'trim\' of undefined') {
     // Swallow a bug in discord.js-commando at:
     // node_modules/discord.js-commando/src/extensions/message.js:109:28

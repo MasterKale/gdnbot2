@@ -1,3 +1,5 @@
+import { SnowflakeUtil } from 'discord.js';
+
 const loggerMock = {
   info: jest.fn(),
   warn: jest.fn(),
@@ -5,6 +7,6 @@ const loggerMock = {
   debug: jest.fn(),
 };
 
-export const getLogTag = (id: string) => ({ req_id: id });
+export const getLogTag = (id: string) => ({ req_id: id || SnowflakeUtil.generate() });
 
 export default loggerMock;

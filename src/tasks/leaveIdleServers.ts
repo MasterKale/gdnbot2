@@ -14,7 +14,7 @@ export default async function leaveIdleServers (tag: LogTag, bot: CommandoClient
   const { data: gdnServers } = await axiosGDN.get(GDN_URLS.GUILDS);
 
   // Determine how many servers
-  const countDiscord = discordGuilds.size;
+  const countDiscord = discordGuilds.cache.size;
   const countGDN = gdnServers.length;
 
   logger.info(tag, `Bot is in ${countDiscord} Discord guilds, of which ${countGDN} are in GDN`);
@@ -24,7 +24,7 @@ export default async function leaveIdleServers (tag: LogTag, bot: CommandoClient
     gdnServersMapped[gdn.server_id] = gdn.name;
   });
 
-  const idlingIn = discordGuilds.filter((guild: Guild) => !gdnServersMapped[guild.id]);
+  const idlingIn = discordGuilds.cache.filter((guild: Guild) => !gdnServersMapped[guild.id]);
   logger.info(tag, `Idling in ${idlingIn.size} guilds`);
 
   // Remove the bot from servers it's idling in

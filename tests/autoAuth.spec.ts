@@ -62,9 +62,11 @@ const guild = {
     ),
   },
   channels: {
-    get: jest.fn().mockImplementation(
-      (_id) => Promise.resolve(_id === channelID ? _guildChannels[0] : null),
-    ),
+    cache: {
+      get: jest.fn().mockImplementation(
+        (_id) => _id === channelID ? _guildChannels[0] : null,
+      ),
+    },
   },
 };
 
@@ -73,8 +75,12 @@ const member = {
   id: memberID,
   user: {
     tag: 'foobar',
+    get: () => memberID,
   },
-  roles: [],
+  roles: {
+    get: () => [],
+    add: jest.fn(),
+  },
   edit: jest.fn(),
   send: jest.fn().mockImplementation(() => ({
     channel: userDM,
@@ -120,7 +126,7 @@ test('[HAPPY PATH] add auth role to authed user when they join a GDN server', as
 
   await timeoutFn();
 
-  expect(member.edit).toHaveBeenCalledWith({ roles: [authRole] }, 'GDN: Successful Auth');
+  expect(member.roles.add).toHaveBeenCalledWith(authRole, 'GDN: Successful Auth');
   expect(logChannel.send).toHaveBeenCalledWith(`${member.user} (SA: ${saUsername}) successfully authed`);
 });
 
@@ -188,7 +194,7 @@ test('does not proceed when error occurs while checking if user has authed befor
     },
   });
 
-  // Member has not authed
+  // Server errors out
   moxios.stubRequest(GDN_MEMBER, {
     status: 500,
   });
@@ -199,7 +205,10 @@ test('does not proceed when error occurs while checking if user has authed befor
 
   await timeoutFn();
 
-  expect(logger.info).toHaveBeenLastCalledWith({ req_id: testTag }, 'Did not proceed with auto-auth');
+  expect(logger.error).toHaveBeenLastCalledWith(
+    { req_id: testTag, err: new Error('Request failed with status code 500') },
+    `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
+  );
 });
 
 test('does not proceed when user is blacklisted', async () => {
@@ -268,5 +277,8 @@ test('does not proceed when an error occurs while checking if user is blackliste
 
   await timeoutFn();
 
-  expect(logger.info).toHaveBeenLastCalledWith({ req_id: testTag }, 'Did not proceed with auto-auth');
+  expect(logger.error).toHaveBeenLastCalledWith(
+    { req_id: testTag, err: new Error('Request failed with status code 500') },
+    `AutoAuth error when performing auth checks in guild ${guild.name} (${guild.id})`,
+  );
 });

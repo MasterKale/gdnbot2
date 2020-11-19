@@ -23,7 +23,7 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
     });
 
     // Go through each Guild and attempt to count the number of authed Members
-    bot.guilds.each(async (guild) => {
+    bot.guilds.cache.each(async (guild) => {
       const subTag = { ...tag, guildID: guild.id };
       // Don't do anything if this guild isn't enrolled in GDN
       if (!guildsMap[guild.id]) {
@@ -38,12 +38,12 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
       let message: string;
       if (!authedRoleID) {
         // Auth wasn't set up here, so just return the total number of Members
-        authedUsers = guild.members;
+        authedUsers = guild.members.cache;
         message = 'Updating total member count';
       } else {
         // Go through each Member and filter for ones that have the Guild's auth role
-        authedUsers = guild.members.filter(
-          member => member.roles.some(role => role.id === authedRoleID),
+        authedUsers = guild.members.cache.filter(
+          member => member.roles.cache.some(role => role.id === authedRoleID),
         );
         message = 'Updating authed member count';
       }
@@ -54,7 +54,7 @@ export async function updateHomepageMemberCounts (tag: LogTag, bot: CommandoClie
        * display "0 goons"
        */
       if (authedRoleID && authedUsers.size < 1) {
-        authedUsers = guild.members;
+        authedUsers = guild.members.cache;
         message = 'Authed member count was zero. Updating total member count';
       }
 

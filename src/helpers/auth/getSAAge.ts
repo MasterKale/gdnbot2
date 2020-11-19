@@ -3,6 +3,11 @@ import { DateTime } from 'luxon';
 
 import logger, { LogTag } from '../logger';
 
+const errorNoRegDate = oneLine`
+  I could not find a valid reg date on your SA profile page. The bot owner has been notified. Thank
+  you for your patience while they get this fixed!
+`;
+
 interface SAAge {
   age?: number;
   reason?: string;
@@ -17,7 +22,7 @@ export default async function getSAAge (tag: LogTag, profile: CheerioStatic): Pr
   // Prepare to parse it
   const $ = profile;
 
-  // Try to grab the post count
+  // Try to grab the reg date
   const regDateText = $('dd.registered').text();
 
   /**
@@ -31,17 +36,22 @@ export default async function getSAAge (tag: LogTag, profile: CheerioStatic): Pr
     logger.error(tag, 'No reg date was found');
     return {
       age: undefined,
-      reason: oneLine`
-        I could not find a reg date on your SA profile page. The bot owner has been notified. Thank
-        you for your patience while they get this fixed!
-      `,
+      reason: errorNoRegDate,
     };
   }
 
-  logger.debug(tag, `Reg date: ${regDateText}`);
+  logger.debug(tag, `Reg date: "${regDateText}"`);
 
   const regDate = DateTime.fromFormat(regDateText, 'LLL d, y');
   const age = regDate.diffNow('day').days;
+
+  if (Number.isNaN(age)) {
+    logger.error(tag, 'Invalid reg date was found');
+    return {
+      age: undefined,
+      reason: errorNoRegDate,
+    };
+  }
 
   logger.info(tag, `Age in days: ${age}`);
   return {

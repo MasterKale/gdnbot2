@@ -73,7 +73,7 @@ export default class ListCommand extends GDNCommand {
         });
         break;
       case OPTIONS.ROLES:
-        listRoles(guild).each(role => {
+        listRoles(guild).cache.each(role => {
           listEmbed.addField(role.name, role.id);
         });
         break;

@@ -20,7 +20,7 @@ export default async function isValidLogChannel (
 
   if (channelId) {
     logger.info(tag, `Validating logging channel ID: '${channelId}'`);
-    const textChannel = guild.channels.get(channelId);
+    const textChannel = guild.channels.cache.get(channelId);
 
     if (textChannel?.type === 'text') {
       logger.info(tag, `Found valid text channel: '#${textChannel.name}'`);

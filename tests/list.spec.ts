@@ -47,13 +47,26 @@ const channels = new Collection<TextChannel | VoiceChannel, TextChannel | VoiceC
 
 const guild = {
   name: 'testGuild',
-  roles,
-  channels,
+  roles: {
+    cache: roles,
+  },
+  channels: {
+    cache: channels,
+  },
 }as unknown as Guild;
 
 const message = {
+  command: {
+    name: 'list',
+  },
+  member: {
+    user: {
+      tag: 'IAmKale#9999'
+    },
+  },
   guild,
   embed: jest.fn(),
+  client: { commandPrefix: '!' },
 } as unknown as CommandoMessage;
 
 test('return a GDNEmbed', () => {

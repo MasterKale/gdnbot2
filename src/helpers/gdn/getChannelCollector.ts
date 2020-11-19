@@ -32,7 +32,7 @@ export default function getChannelCollector (
 
         logger.info(tag, `Confirming channel ID "${channelID}" is valid`);
 
-        const channel = guild.channels.get(channelID);
+        const channel = guild.channels.cache.get(channelID);
 
         if (!channel) {
           return oneLine`

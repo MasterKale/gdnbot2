@@ -1,5 +1,6 @@
 import moxios from 'moxios';
 import { oneLine, stripIndents } from 'common-tags';
+import { DateTime } from 'luxon';
 
 import AuthmeCommand from '../src/commands/auth/authme';
 
@@ -45,7 +46,12 @@ const member = {
   user: {
     tag: 'foobar',
   },
-  roles: [],
+  roles: {
+    cache: {
+      get: () => [],
+    },
+    add: jest.fn(),
+  },
   edit: jest.fn(),
   send: jest.fn().mockImplementation(() => ({
     channel: userDM,
@@ -60,16 +66,20 @@ const guild = {
   id: guildID,
   name: 'Test Guild',
   roles: {
-    get () { return _guildRoles; },
-    set () {},
     fetch: jest.fn().mockImplementation(
       (_id) => Promise.resolve(_id === roleID ? _guildRoles[0] : null),
     ),
+    cache: {
+      get () { return _guildRoles; },
+      set () {},
+    },
   },
   channels: {
-    get: jest.fn().mockImplementation(
-      (_id) => _id === channelID ? _guildChannels[0] : null,
-    ),
+    cache: {
+      get: jest.fn().mockImplementation(
+        (_id) => _id === channelID ? _guildChannels[0] : null,
+      ),
+    },
   },
 };
 
@@ -80,6 +90,8 @@ const message = {
   member,
   say: jest.fn(),
   reply: jest.fn(),
+  client: { commandPrefix: '!' },
+  command: { name: 'authme' },
 } as unknown as CommandoMessage;
 
 // Good Profile
@@ -99,6 +111,7 @@ const goodSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
+      <td><dd class="registered">Aug 28, 2008</td>
     </tr>
   </table>
   <input type="hidden" name="userid" value="${saID}" />
@@ -123,6 +136,7 @@ const badUserIDSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
+      <td><dd class="registered">Aug 28, 2008</td>
     </tr>
   </table>
   <input type="hidden" name="id" value="${saID}" />
@@ -130,7 +144,8 @@ const badUserIDSAProfileHTML = oneLine`
 </html>
 `;
 
-// Bad Profile: Insufficient user post count
+// Bad Profile: Insufficient account age
+const now = DateTime.local();
 const badPostCountSAProfileHTML = oneLine`
 <!DOCTYPE html>
 <html lang="en">
@@ -147,6 +162,8 @@ const badPostCountSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
+      <!-- Pretend the user registered today -->
+      <td><dd class="registered">${now.toFormat('LLL d, y')}</td>
     </tr>
   </table>
   <input type="hidden" name="userid" value="${saID}" />
@@ -175,6 +192,8 @@ const badChangedMarkupSAProfileHTML = oneLine`
           <i>Goon API</i> claims to be a porpoise.
         </p>
       </td>
+      <!-- Pretend reg dates are no longer shown -->
+      <td><dd class="registered">WHO KNOWS????</td>
     </tr>
   </table>
   <input type="hidden" name="userid" value="${saID}" />
@@ -190,7 +209,7 @@ const GDN_DB = `${axiosGDN.defaults.baseURL}${GDN_URLS.MEMBERS}`;
 const GAUTH_GET = `${axiosGoonAuth.defaults.baseURL}/${GOON_AUTH_URLS.GET_HASH}`;
 const GAUTH_CONFIRM = `${axiosGoonAuth.defaults.baseURL}/${GOON_AUTH_URLS.CONFIRM_HASH}`;
 
-const SA_PROFILE = `${SA_URLS.PROFILE}${saUsername}`;
+const SA_PROFILE = `${SA_URLS.PROFILE}&username=${saUsername}`;
 
 const authme = new AuthmeCommand({} as unknown as CommandoClient);
 
@@ -249,7 +268,7 @@ test('[HAPPY PATH] adds role to user that has never authed before', async () => 
 
   await authme.run(message, { username: saUsername });
 
-  expect(member.edit).toHaveBeenCalledWith({ roles: [authRole] }, 'GDN: Successful Auth');
+  expect(member.roles.add).toHaveBeenCalledWith(authRole, 'GDN: Successful Auth');
   expect(logChannel.send).toHaveBeenCalledWith(`${member.user} (SA: ${saUsername}) successfully authed`);
 });
 
@@ -281,7 +300,7 @@ test('skips hash check for user that has authed before and is not blacklisted', 
 
   await authme.run(message, { username: saUsername });
 
-  expect(member.edit).toHaveBeenCalledWith({ roles: [authRole] }, 'GDN: Successful Auth');
+  expect(member.roles.add).toHaveBeenCalledWith(authRole, 'GDN: Successful Auth');
   expect(logChannel.send).toHaveBeenCalledWith(`${member.user} (SA: ${saUsername}) successfully authed`);
 });
 
@@ -652,7 +671,7 @@ test('messages channel and logs error when an error occurs while checking if use
   expect(logger.error).toHaveBeenCalledWith({ req_id: message.id, err: new Error('Request failed with status code 500') }, 'Error checking if member has authed');
 });
 
-test('messages channel when user post count is too low', async () => {
+test('messages channel when user SA account is too young', async () => {
   // Guild is enrolled in GDN
   moxios.stubRequest(GDN_GUILD, {
     status: 200,
@@ -694,7 +713,7 @@ test('messages channel when user post count is too low', async () => {
 
   await authme.run(message, { username: saUsername });
 
-  expect(message.say).toHaveBeenLastCalledWith('Your SA account has an insufficient posting history. Please try again later.');
+  expect(member.send).toHaveBeenLastCalledWith('Your SA account must be at least 7 days old. Please try again later.');
 });
 
 test('messages user and logs error when an error occurs while retrieving SA profile', async () => {
@@ -742,7 +761,7 @@ test('messages user and logs error when an error occurs while retrieving SA prof
   expect(logger.error).toHaveBeenCalledWith({ req_id: message.id, err: new Error('Request failed with status code 500') }, 'Error retrieving SA profile page');
 });
 
-test('messages user when bot is unable to parse post count from profile', async () => {
+test('messages user when bot is unable to parse account reg date from profile', async () => {
   // Guild is enrolled in GDN
   moxios.stubRequest(GDN_GUILD, {
     status: 200,
@@ -784,8 +803,8 @@ test('messages user when bot is unable to parse post count from profile', async 
 
   await authme.run(message, { username: saUsername });
 
-  expect(member.send).toHaveBeenLastCalledWith('I could not find a post count on the SA profile page for the username you provided. The bot owner has been notified. Thank you for your patience while they get this fixed!');
-  expect(logger.error).toHaveBeenCalledWith({ req_id: message.id }, 'No post count was found');
+  expect(member.send).toHaveBeenLastCalledWith('I could not find a valid reg date on your SA profile page. The bot owner has been notified. Thank you for your patience while they get this fixed!');
+  expect(logger.error).toHaveBeenCalledWith({ req_id: message.id }, 'Invalid reg date was found');
 });
 
 test('logs error when error occurs while adding user to database', async () => {
@@ -893,7 +912,7 @@ test('logs error 50013 error occurs while assigning role to authed user', async 
     status: 200,
   });
 
-  message.member.edit = jest.fn().mockImplementation(() => {
+  message.member.roles.add = jest.fn().mockImplementation(() => {
     throw new HTTPError('API Error could not add role to user', 'Error', 50013, 'PUT', '/userroles');
   });
 
@@ -955,14 +974,14 @@ test('reports misconfiguration in channel when 50013 error occurs while assignin
     status: 200,
   });
 
-  message.member.edit = jest.fn().mockImplementation(() => {
+  message.member.roles.add = jest.fn().mockImplementation(() => {
     throw new HTTPError('API Error could not add role to user', 'Error', 50013, 'PUT', '/userroles');
   });
 
   await authme.run(message, { username: saUsername });
 
   expect(logChannel.send).toHaveBeenCalledWith(stripIndents`
-    @here GDNBot just now attempted to apply the **${authRole.name}** role to ${member.user}, but none of the bot's own roles are higher than the **${authRole.name}** role. Alternatively, if this member is an admin then they may be assigned a role that is positioned higher in the Roles hierarchy than any of the bot's roles.
+    @here An attempt was made to apply the **${authRole.name}** role to ${member.user}, but none of the bot's own roles are higher than the **${authRole.name}** role. Alternatively, if this member is an admin then they may be assigned a role that is positioned higher in the Roles hierarchy than any of the bot's roles.
 
     To fix this for future members, please go into **Server Settings > Roles** and apply a role to GDNBot that is _above_ the **${authRole.name}** role.
 
@@ -1004,6 +1023,8 @@ test('logs error when 50013 error occurs while assigning role to authed user but
     },
   });
 
+  console.log(SA_PROFILE);
+
   // SA username returns a valid SA profile
   moxios.stubRequest(SA_PROFILE, {
     status: 200,
@@ -1020,7 +1041,7 @@ test('logs error when 50013 error occurs while assigning role to authed user but
     status: 200,
   });
 
-  message.member.edit = jest.fn().mockImplementation(() => {
+  message.member.roles.add = jest.fn().mockImplementation(() => {
     throw new HTTPError('API Error could not add role to user', 'Error', 50013, 'PUT', '/userroles');
   });
 

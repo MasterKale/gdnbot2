@@ -56,7 +56,9 @@ export default class SetDescriptionCommand extends GDNCommand {
             logger.info(tag, `Validating role name "${roleName}"`);
 
             const toFind = `${roleName.toLowerCase()}`;
-            const role = message.guild.roles.find((role) => role.name.toLowerCase() === toFind);
+            const role = message.guild.roles.cache.find(
+              (role) => role.name.toLowerCase() === toFind,
+            );
 
             if (!role) {
               return oneLine`
@@ -75,7 +77,7 @@ export default class SetDescriptionCommand extends GDNCommand {
             logger.info(tag, `Parsing ${roleName}`);
 
             const toFind = `${roleName.toLowerCase()}`;
-            return message.guild.roles.find((role) => role.name.toLowerCase() === toFind)!;
+            return message.guild.roles.cache.find((role) => role.name.toLowerCase() === toFind)!;
           },
         },
       ],
@@ -96,7 +98,7 @@ export default class SetDescriptionCommand extends GDNCommand {
      * Check if the role the user specified is the enrolled guild's "verified goon" role
      */
     if (isEnrolled && guildData?.validated_role_id) {
-      const gdnRole = guild.roles.get(guildData.validated_role_id);
+      const gdnRole = guild.roles.cache.get(guildData.validated_role_id);
 
       if (gdnRole && gdnRole.id === role.id) {
         logger.info(tag, 'User tried to toggle authme role, exiting');
@@ -116,7 +118,7 @@ export default class SetDescriptionCommand extends GDNCommand {
       `,
     );
 
-    const hasRole = member.roles.has(role.id);
+    const hasRole = member.roles.cache.has(role.id);
 
     try {
       let reply;

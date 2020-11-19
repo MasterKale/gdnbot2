@@ -32,7 +32,7 @@ export default function getRoleCollector (
 
         logger.info(tag, `Confirming role ID "${roleID}" is valid`);
 
-        const role = guild.roles.get(roleID);
+        const role = guild.roles.cache.get(roleID);
 
         if (!role) {
           return oneLine`

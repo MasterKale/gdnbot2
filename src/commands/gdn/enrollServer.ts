@@ -105,7 +105,7 @@ export default class ListCommand extends GDNCommand {
       logger.info(tag, 'User is blacklisted from GDN, exiting');
 
       message.channel.stopTyping();
-      return message.reply(reason);
+      return message.reply(`${reason}`);
     }
 
     /**
@@ -189,7 +189,7 @@ export default class ListCommand extends GDNCommand {
 
     if (!profile) {
       message.channel.stopTyping();
-      return message.reply(reasonErrorProfileLoad);
+      return message.reply(`${reasonErrorProfileLoad}`);
     }
 
     /**
@@ -199,7 +199,7 @@ export default class ListCommand extends GDNCommand {
 
     if (age === undefined) {
       message.channel.stopTyping();
-      return message.reply(reasonNoRegDate);
+      return message.reply(`${reasonNoRegDate}`);
     }
 
     if (age < ENROLL_MIN_ACCOUNT_AGE_DAYS) {

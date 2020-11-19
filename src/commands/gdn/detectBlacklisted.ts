@@ -81,7 +81,7 @@ export default class DetectBlacklistedCommand extends GDNCommand {
     /**
      * Filter guild members to just those who are blacklisted
      */
-    const matching = guild.members.filter(
+    const matching = guild.members.cache.filter(
       (member: GuildMember) => !!mappedBlacklisted[member.id],
     );
 
