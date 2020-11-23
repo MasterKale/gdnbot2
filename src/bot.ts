@@ -17,6 +17,7 @@ import updateServerCountActivity from './tasks/updateServerCountActivity';
 import {
   updateHomepageMemberCounts,
 } from './tasks/updateHomepageMemberCounts';
+import reactivateGuildInGDN from './tasks/reactivateGuildInGDN';
 import deactivateGuildInGDN from './tasks/deactivateGuildInGDN';
 import syncSAPermabans from './tasks/syncSAPermabans';
 import leaveIdleServers from './tasks/leaveIdleServers';
@@ -105,6 +106,9 @@ bot.on('guildCreate', (guild: Guild) => {
 
   logger.info(tag, `Joined guild ${guild.name} (${guild.id})`);
   updateServerCountActivity(tag, bot);
+
+  // Try to re-enable the guild if it's been deactivated
+  reactivateGuildInGDN(tag, guild);
 });
 
 // When the bot leaves a Guild
@@ -114,8 +118,8 @@ bot.on('guildDelete', (guild: Guild) => {
   logger.info(tag, `Left guild ${guild.name} (${guild.id})`);
 
   updateServerCountActivity(tag, bot);
-  // Temporarily disable this since Discord is doing some kind of netsplit that's
-  // errantly causing this bot to delete servers from GDN
+
+  // Mark this server as "deactivated" so it's hidden on the GDN homepage
   deactivateGuildInGDN(tag, guild);
 });
 
