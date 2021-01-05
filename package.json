@@ -13,7 +13,7 @@
     "lint": "eslint src/ --ext .ts"
   },
   "dependencies": {
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "bunyan": "^1.8.14",
     "bunyan-syslog": "^0.3.3",
     "capitalize": "^2.0.3",
